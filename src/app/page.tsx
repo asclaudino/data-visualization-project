@@ -1,5 +1,4 @@
 // app/page.tsx
-//import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -11,18 +10,33 @@ export default function Home() {
         </h1>
         <p className="mt-4 text-slate-600">
           Explore powerful insights through interactive charts and intuitive design.
-          Built with <span className="font-semibold text-slate-800">Next.js</span> and{" "}
+          Built with{" "}
+          <span className="font-semibold text-slate-800">Next.js</span> and{" "}
           <span className="font-semibold text-slate-800">D3.js</span>.
         </p>
 
-        <div className="mt-8">
+        {/* Navigation Section */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
+            href="/world-map"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white text-sm font-medium hover:bg-blue-500 transition-all"
+          >
+            Explore World Map
+          </Link>
+
+          <Link
+            href="/compare-countries"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-white text-sm font-medium hover:bg-emerald-500 transition-all"
+          >
+            Compare Countries
+          </Link>
+
+          {/* <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-3 text-white text-sm font-medium hover:bg-slate-700 transition-all"
           >
-            Go to Dashboard
-            {/* <ArrowRight size={18} /> */}
-          </Link>
+            Go to Home
+          </Link> */}
         </div>
       </div>
 
