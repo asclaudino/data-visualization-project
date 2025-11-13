@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
 import * as d3 from "d3";
 import { feature, mesh } from "topojson-client";
 
@@ -9,6 +9,8 @@ type Topology = any;
 // at the top of WorldMap.tsx
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 type CountryFeature = Feature<Geometry, Record<string, any>>;
+
+type Tip = { x: number; y: number; text: string; show: boolean };
 
 type WorldMapProps = {
   /** URL to your TopoJSON in public/, e.g. "/data/world-110m.json" */
@@ -38,7 +40,32 @@ export default function WorldMap({
   const gRef = useRef<SVGGElement | null>(null);
   const [topology, setTopology] = useState<Topology | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+  const [tip, setTip] = useState<Tip>({ x: 0, y: 0, text: "", show: false });
 
+  // helper to clamp within wrapper
+  const placeTip = (clientX: number, clientY: number, text: string) => {
+    const wrap = wrapperRef.current!;
+    const rect = wrap.getBoundingClientRect();
+
+    // coords relative to wrapper
+    const rawX = clientX - rect.left;
+    const rawY = clientY - rect.top;
+
+    // measure tooltip (fallback sizes)
+    const w = tipRef.current?.offsetWidth ?? 60;
+    const h = tipRef.current?.offsetHeight ?? 14;
+
+    // small offset so it doesn’t sit under the cursor
+    const PAD = 12;
+    const MAX_X = rect.width - w - 8;
+    const MAX_Y = rect.height - h - 8;
+
+    const x = Math.min(Math.max(PAD, rawX + PAD), MAX_X);
+    const y = Math.min(Math.max(PAD, rawY + PAD), MAX_Y);
+
+    setTip({ x, y, text, show: true });
+  };
   // responsive container size
   const [width, setWidth] = useState<number>(800);
   const height = Math.max(360, Math.round(width * 0.55)); // nice aspect ratio for Natural Earth
@@ -134,8 +161,7 @@ export default function WorldMap({
     };
   }, [width, height]);
 
-  // tooltip
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
+  
 
   // render countries whenever size/data change
   useEffect(() => {
@@ -188,18 +214,23 @@ export default function WorldMap({
       .attr("d", path as any)
       .on("mousemove", (event: MouseEvent, d: CountryFeature) => {
         const name =
-          d.properties?.name || d.properties?.NAME_EN || d.properties?.ADMIN || String(d.id ?? "Unknown");
-      
-        setTooltip({ x: event.clientX, y: event.clientY, text: name });
+          d.properties?.name ||
+          d.properties?.NAME_EN ||
+          d.properties?.ADMIN ||
+          String(d.id ?? "Unknown");
+            
+        placeTip(event.clientX, event.clientY, name);
+            
         onCountryHover?.(d.properties);
-      
-        d3.select(event.currentTarget as SVGPathElement).attr("fill", "hsl(210 25% 85%)");
+        d3.select(event.currentTarget as SVGPathElement)
+          .attr("fill", "hsl(210 25% 85%)");
       })
       .on("mouseleave", (event: MouseEvent, _d: CountryFeature) => {
-        setTooltip(null);
+        setTip(t => ({ ...t, show: false }));   // hide via show flag
+        setTip(t => ({ ...t, show: false }));   // (and keep your old state if you want)
         onCountryHover?.(null);
-      
-        d3.select(event.currentTarget as SVGPathElement).attr("fill", "hsl(210 10% 92%)");
+        d3.select(event.currentTarget as SVGPathElement)
+          .attr("fill", "hsl(210 10% 92%)");
       })
       .on("click", (_event: MouseEvent, d: CountryFeature) => {
         onCountryClick?.(d.properties);
@@ -226,8 +257,9 @@ export default function WorldMap({
   }, [countries, borders, path, onCountryClick, onCountryHover]);
 
   return (
-    <div ref={wrapperRef} className={className ?? "w-full"}>
-      <div className="relative rounded-2xl border bg-card p-2 shadow-sm">
+    <div className={className ?? ""}>
+      {/* Make THIS the positioning context for both the SVG and the tooltip */}
+      <div ref={wrapperRef} className="relative rounded-2xl border bg-card p-2 shadow-sm">
         <svg
           ref={svgRef}
           width="100%"
@@ -241,24 +273,24 @@ export default function WorldMap({
         </svg>
 
         {/* Tooltip */}
-        {tooltip && (
+        {tip.show && (
           <div
-            className="pointer-events-none absolute z-10 rounded-md border bg-popover px-2 py-1 text-xs shadow"
+            ref={tipRef}
+            className="pointer-events-none absolute z-50 rounded-md border px-2 py-1 text-xs shadow-sm"
             style={{
-              left: tooltip.x + 12,
-              top: tooltip.y - 28,
+              left: tip.x,   // numbers are fine; React treats as px
+              top:  tip.y,
+              backgroundColor: "hsl(120 60% 85%)", // light green
+              color: "hsl(120 20% 20%)",           // dark green
             }}
           >
-            {tooltip.text}
+            {tip.text}
           </div>
         )}
       </div>
 
-      {error && (
-        <p className="mt-2 text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>
   );
+
 }
