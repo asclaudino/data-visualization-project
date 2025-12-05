@@ -4,8 +4,23 @@
 import Link from "next/link";
 import WorldMap from "@/components/WorldMap";
 import { use } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+
+  const handleCountryClick = (props: any) => {
+    // Pick a stable identifier based on your TopoJSON properties
+    const id =
+      props?.ISO_A3 || props?.id || props?.name || props?.ADMIN;
+
+    if (!id) return;
+
+    const slug = encodeURIComponent(id);
+    console.log("Navigating to country overview for:", slug);
+    router.push(`/country-overview/${slug}`);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 px-6 text-center">
       <div className="max-w-3xl rounded-2xl bg-white p-10 shadow-xl border border-slate-100">
@@ -19,14 +34,10 @@ export default function Page() {
         </p>
 
         <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner">
-          {/* <WorldMap /> */}
           <WorldMap
             dataUrl="data/countries-110m.json"
-            objectName="countries" // change if your file uses another name (e.g., "units")
-            onCountryClick={(props) => {
-              // Example: wire to a router, side panel, or state
-              console.log("Clicked:", props?.name ?? props?.ADMIN ?? props);
-            }}
+            objectName="countries"
+            onCountryClick={handleCountryClick}
           />
         </div>
 

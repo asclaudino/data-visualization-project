@@ -6,13 +6,14 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 px-6 text-center">
       <div className="max-w-2xl rounded-2xl bg-white p-10 shadow-xl border border-slate-100">
         <h1 className="text-4xl font-bold tracking-tight text-slate-800">
-          Data Visualization Project
+          CSC 51052 - Data Visualization 
         </h1>
         <p className="mt-4 text-slate-600">
-          Explore powerful insights through interactive charts and intuitive design.
-          Built with{" "}
-          <span className="font-semibold text-slate-800">Next.js</span> and{" "}
-          <span className="font-semibold text-slate-800">D3.js</span>.
+          Natural disaster data visualization project showcasing global events and its impact.
+        </p>
+        
+        <p className="mt-4 text-slate-600">
+          Students: Ariel Silva Claudino, Eric Guerra Ribeiro & Luis Henrique Zuin Ruiz
         </p>
 
         {/* Navigation Section */}
@@ -41,6 +42,11 @@ export default function Home() {
       </div>
 
       <footer className="mt-10 text-sm text-slate-500">
+        <p className="mt-4 text-slate-600">
+          Built with{" "}
+          <span className="font-semibold text-slate-800">Next.js</span> and{" "}
+          <span className="font-semibold text-slate-800">D3.js</span>.
+        </p>
         © {new Date().getFullYear()} Data Visualization Project
       </footer>
     </main>
