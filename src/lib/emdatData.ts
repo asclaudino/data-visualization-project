@@ -10,12 +10,24 @@ export type DisasterRecord = {
   // NEW FIELDS
   totalDeaths: number | null;
   totalAffected: number | null;
+
   /**
    * Monetary fields are in '000 US$ (as in the CSV).
-   * We keep the raw adjusted components plus a convenience field
-   * `economicDamageAdj` that prefers Reconstruction Costs, Adjusted
-   * and falls back to Insured Damage, Adjusted when missing.
+   *
+   * totalDamageAdj:
+   *   EM-DAT "Total Damage, Adjusted ('000 US$)" – usually the combined figure.
+   *
+   * reconstructionCostsAdj:
+   *   EM-DAT "Reconstruction Costs, Adjusted ('000 US$)".
+   *
+   * insuredDamageAdj:
+   *   EM-DAT "Insured Damage, Adjusted ('000 US$)" (fallback variants handled).
+   *
+   * economicDamageAdj:
+   *   Convenience field for your KPI:
+   *   prefers totalDamageAdj, then reconstructionCostsAdj, then insuredDamageAdj.
    */
+  totalDamageAdj: number | null;
   reconstructionCostsAdj: number | null;
   insuredDamageAdj: number | null;
   economicDamageAdj: number | null;
@@ -57,6 +69,10 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
           row["Total Affected"] as string | undefined
         );
 
+        const totalDamageAdj = parseNumericField(
+          row["Total Damage, Adjusted ('000 US$)"] as string | undefined
+        );
+
         const reconstructionCostsAdj = parseNumericField(
           row["Reconstruction Costs, Adjusted ('000 US$)"] as
             | string
@@ -74,9 +90,9 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
           parseNumericField(row["Insured"] as string | undefined);
 
         // Convenience field for your "Total economic damage" card:
-        // prefer reconstructionCostsAdj, otherwise fall back to insuredDamageAdj.
+        // prefer totalDamageAdj, then reconstructionCostsAdj, then insuredDamageAdj.
         const economicDamageAdj =
-          reconstructionCostsAdj ?? insuredDamageAdj ?? null;
+          totalDamageAdj ?? reconstructionCostsAdj ?? insuredDamageAdj ?? null;
 
         return {
           iso,
@@ -85,6 +101,7 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
           disasterType,
           totalDeaths,
           totalAffected,
+          totalDamageAdj,
           reconstructionCostsAdj,
           insuredDamageAdj,
           economicDamageAdj,

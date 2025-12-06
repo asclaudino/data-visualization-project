@@ -5,6 +5,9 @@ import { useState } from "react";
 import { DISASTER_TYPES, type DisasterType } from "@/lib/utils/disasterTypes";
 import TotalEventsCard from "./TotalEventsCard"; // <- add this
 import TotalDeathsCard from "./TotalDeathsCard"; // ⬅️ add this
+import TotalAffectedCard from "./TotalAffectedCard";
+import TotalEconomicDamageCard from "./TotalEconomicDamageCard";
+
 
 type Props = {
   countryId: string;
@@ -185,11 +188,18 @@ export default function CountryOverviewClient({ countryId }: Props) {
           selectedTypes={selectedTypes}
           yearRange={yearRange}
         />
-        {/* soon: */}
-        {/* <TotalAffectedCard ... /> */}
-        {/* <TotalDamageCard ... /> */}
+        <TotalAffectedCard
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+        <TotalEconomicDamageCard
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
       </div>
-                  
+
       {/* D3 placeholder for larger charts */}
       <div className="h-64 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-slate-400 text-sm">
         D3 placeholder — drop your SVG / canvas components here.
