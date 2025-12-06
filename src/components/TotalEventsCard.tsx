@@ -48,43 +48,40 @@ export default function TotalEventsCard({
     };
   }, []);
 
-  // Filter for this country + filters
-  const filteredEvents = useMemo(() => {
+  // 1) Base filtered events = country + year
+  const baseEvents = useMemo(() => {
     if (!data) return [];
     const [startYear, endYear] = yearRange;
 
-    const typeSet = new Set(selectedTypes.map((t) => t.toLowerCase()));
     const idLower = countryId.toLowerCase();
 
-    const result = data.filter((d) => {
-      const countryLower = d.country.toLowerCase();
-      const matchesCountry = countryLower === idLower;
-
-      const matchesType =
-        typeSet.size === 0 ||
-        typeSet.has(d.disasterType.toLowerCase());
-
+    return data.filter((d) => {
+      const matchesCountry = d.country.toLowerCase() === idLower;
       const matchesYear = d.year >= startYear && d.year <= endYear;
-
-      return matchesCountry && matchesType && matchesYear;
+      return matchesCountry && matchesYear;
     });
+  }, [data, countryId, yearRange]);
 
-    console.log(
-      "[TotalEventsCard] Filtered events",
-      { countryId, selectedTypes, yearRange },
-      "=>",
-      result.length
+
+  // 2) Type-filtered events = baseEvents + disaster types
+  const typeFilteredEvents = useMemo(() => {
+    const typeSet = new Set(selectedTypes.map((t) => t.toLowerCase()));
+
+    // If NO types → return empty array (KPI = 0)
+    if (typeSet.size === 0) return [];
+
+    return baseEvents.filter((d) =>
+      typeSet.has(d.disasterType.toLowerCase())
     );
+  }, [baseEvents, selectedTypes]);
 
-    return result;
-  }, [data, countryId, selectedTypes, yearRange]);
 
-  // Aggregate to counts per year for the sparkline
+  // 3) You STILL get yearly counts based on baseEvents (not typeFilteredEvents)
   const yearlyCounts = useMemo(() => {
-    if (!filteredEvents.length) return [];
+    if (!baseEvents.length) return [];
 
     const rollup = d3.rollups(
-      filteredEvents,
+      baseEvents,
       (v) => v.length,
       (d) => d.year
     );
@@ -92,9 +89,13 @@ export default function TotalEventsCard({
     return rollup
       .map(([year, count]) => ({ year: Number(year), count }))
       .sort((a, b) => a.year - b.year);
-  }, [filteredEvents]);
+  }, [baseEvents]);
 
-  const totalEvents = filteredEvents.length;
+
+  // 4) KPI value uses the typeFilteredEvents
+  const totalEvents = typeFilteredEvents.length;
+
+
 
   // Draw sparkline when data changes
   useEffect(() => {
