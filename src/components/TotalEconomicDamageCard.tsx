@@ -157,14 +157,14 @@ export default function TotalEconomicDamageCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Total economic damage
+            Total economic damage (1000 US$)
           </p>
           <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">
             {displayValue} 
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">
-            Sum of Reconstruction Costs,Insured Damage in thousands of dollars for the current filters.
-          </p>
+          {/* <p className="mt-1 text-[11px] text-slate-500">
+            Total Economic Damage in thousands of dollars for the current filters.
+          </p> */}
           {/* <p className="mt-1 text-[11px] text-slate-500">
             Sum of{" "}
             <span className="font-medium">

@@ -155,23 +155,23 @@ export default function TotalAffectedCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Total affected
+            Total affected (number of people)
           </p>
           <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">
             {displayValue}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">
+          {/* <p className="mt-1 text-[11px] text-slate-500">
             Sum of <span className="font-medium">Total Affected</span> for the
             current filters.
-          </p>
+          </p> */}
           {/* If you later add population data, you can show "per 100k" here. */}
-          {error && (
+          {/* {error && (
             <p className="mt-1 text-[11px] text-red-500">{error}</p>
-          )}
+          )} */}
         </div>
 
         {/* Sparkline – responsive, no clipping */}
-        {/* <div className="ml-2 flex-1 flex items-start justify-end">
+        <div className="ml-2 flex-1 flex items-start justify-end">
           {showSparkline && (
             <svg
               className="h-10 w-full max-w-[220px] text-sky-500"
@@ -189,7 +189,7 @@ export default function TotalAffectedCard({
               />
             </svg>
           )}
-        </div> */}
+        </div>
       </div>
 
       {/* {showSparkline && (
