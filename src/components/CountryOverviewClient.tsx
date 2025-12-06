@@ -7,6 +7,7 @@ import TotalEventsCard from "./TotalEventsCard"; // <- add this
 import TotalDeathsCard from "./TotalDeathsCard"; // ⬅️ add this
 import TotalAffectedCard from "./TotalAffectedCard";
 import TotalEconomicDamageCard from "./TotalEconomicDamageCard";
+import CountryTimelineStacked from "./CountryTimelineStacked";
 
 
 type Props = {
@@ -200,9 +201,16 @@ export default function CountryOverviewClient({ countryId }: Props) {
         />
       </div>
 
-      {/* D3 placeholder for larger charts */}
-      <div className="h-64 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-slate-400 text-sm">
-        D3 placeholder — drop your SVG / canvas components here.
+      {/* Full-width visualizations, one per line */}
+      <div className="space-y-6">
+        <CountryTimelineStacked
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+
+        {/* future visualizations can stack below, each taking one full line */}
+        {/* <AnotherVisualization ... /> */}
       </div>
     </section>
   );
