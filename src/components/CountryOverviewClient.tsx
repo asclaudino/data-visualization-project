@@ -8,7 +8,7 @@ import TotalDeathsCard from "./TotalDeathsCard"; // ⬅️ add this
 import TotalAffectedCard from "./TotalAffectedCard";
 import TotalEconomicDamageCard from "./TotalEconomicDamageCard";
 import CountryTimelineStacked from "./CountryTimelineStacked";
-
+import CountryTypeComposition from "./CountryTypeComposition";
 
 type Props = {
   countryId: string;
@@ -204,6 +204,12 @@ export default function CountryOverviewClient({ countryId }: Props) {
       {/* Full-width visualizations, one per line */}
       <div className="space-y-6">
         <CountryTimelineStacked
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+
+        <CountryTypeComposition
           countryId={countryId}
           selectedTypes={selectedTypes}
           yearRange={yearRange}
