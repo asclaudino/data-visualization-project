@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { DISASTER_TYPES, type DisasterType } from "@/lib/utils/disasterTypes";
 import TotalEventsCard from "./TotalEventsCard"; // <- add this
+import TotalDeathsCard from "./TotalDeathsCard"; // ⬅️ add this
 
 type Props = {
   countryId: string;
@@ -172,16 +173,23 @@ export default function CountryOverviewClient({ countryId }: Props) {
         </p>
       </div>
 
-      {/* KPI strip (for now only the first card) */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI strip – 2 columns on medium+ screens */}
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <TotalEventsCard
           countryId={countryId}
           selectedTypes={selectedTypes}
           yearRange={yearRange}
         />
-        {/* Future: add more cards here (deaths, affected, damage) */}
+        <TotalDeathsCard
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+        {/* soon: */}
+        {/* <TotalAffectedCard ... /> */}
+        {/* <TotalDamageCard ... /> */}
       </div>
-
+                  
       {/* D3 placeholder for larger charts */}
       <div className="h-64 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-slate-400 text-sm">
         D3 placeholder — drop your SVG / canvas components here.

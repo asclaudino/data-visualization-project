@@ -22,7 +22,7 @@ const SPARKLINE_VIEWBOX_HEIGHT = 40;
 const SPARKLINE_PADDING_X = 6;
 const SPARKLINE_PADDING_Y = 6;
 
-export default function TotalEventsCard({
+export default function TotalDeathsCard({
   countryId,
   selectedTypes,
   yearRange,
@@ -44,8 +44,8 @@ export default function TotalEventsCard({
       })
       .catch((err) => {
         if (cancelled) return;
-        console.error("Error in TotalEventsCard getDisasterData:", err);
-        setError("Failed to load events data");
+        console.error("Error in TotalDeathsCard getDisasterData:", err);
+        setError("Failed to load deaths data");
         setLoading(false);
       });
 
@@ -54,18 +54,18 @@ export default function TotalEventsCard({
     };
   }, []);
 
-  const { totalEvents, yearlySeries } = useMemo(() => {
+  const { totalDeaths, yearlySeries } = useMemo(() => {
     // When filters are cleared, hard-reset card
     if (selectedTypes.length === 0) {
       return {
-        totalEvents: 0,
+        totalDeaths: 0,
         yearlySeries: [] as { year: number; value: number }[],
       };
     }
 
     if (!allData || allData.length === 0) {
       return {
-        totalEvents: 0,
+        totalDeaths: 0,
         yearlySeries: [] as { year: number; value: number }[],
       };
     }
@@ -81,24 +81,28 @@ export default function TotalEventsCard({
 
     if (filtered.length === 0) {
       return {
-        totalEvents: 0,
+        totalDeaths: 0,
         yearlySeries: [] as { year: number; value: number }[],
       };
     }
 
-    const totalEvents = filtered.length;
-
+    let sumDeaths = 0;
     const byYear = new Map<number, number>();
+
     for (const row of filtered) {
+      const deaths = row.totalDeaths ?? 0;
+      if (!Number.isFinite(deaths) || deaths <= 0) continue;
+
+      sumDeaths += deaths;
       const y = row.year;
-      byYear.set(y, (byYear.get(y) ?? 0) + 1);
+      byYear.set(y, (byYear.get(y) ?? 0) + deaths);
     }
 
     const yearlySeries = Array.from(byYear.entries())
       .map(([year, value]) => ({ year, value }))
       .sort((a, b) => a.year - b.year);
 
-    return { totalEvents, yearlySeries };
+    return { totalDeaths: sumDeaths, yearlySeries };
   }, [allData, countryId, selectedTypes, yearRange]);
 
   // Build sparkline path in viewBox coordinates
@@ -142,29 +146,24 @@ export default function TotalEventsCard({
       ? "–"
       : loading || allData === null
       ? "…"
-      : totalEvents.toLocaleString();
+      : totalDeaths.toLocaleString();
 
   return (
     <div className="h-full flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Total events
+            Total deaths
           </p>
           <p className="mt-1 text-2xl font-semibold text-slate-900 tabular-nums">
             {displayValue}
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            Number of disaster entries for the current filters.
+            Sum of <span className="font-medium">Total Deaths</span> for the
+            current filters.
           </p>
           {error && (
             <p className="mt-1 text-[11px] text-red-500">{error}</p>
-          )}
-          {hasFilters && !loading && !error && (
-            <p className="mt-1 text-[11px] text-slate-400">
-              {yearRange[0]}–{yearRange[1]} • {selectedTypes.length} type
-              {selectedTypes.length === 1 ? "" : "s"}
-            </p>
           )}
         </div>
 
@@ -189,6 +188,13 @@ export default function TotalEventsCard({
           )}
         </div>
       </div>
+
+      {showSparkline && (
+        <p className="mt-2 text-[10px] text-slate-400">
+          Sparkline: deaths per year ({yearRange[0]}–{yearRange[1]}), using{" "}
+          <span className="font-medium">Start Year</span>.
+        </p>
+      )}
     </div>
   );
 }
