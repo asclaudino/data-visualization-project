@@ -9,6 +9,7 @@ import TotalAffectedCard from "./TotalAffectedCard";
 import TotalEconomicDamageCard from "./TotalEconomicDamageCard";
 import CountryTimelineStacked from "./CountryTimelineStacked";
 import CountryTypeComposition from "./CountryTypeComposition";
+import CountrySeverityScatter from "./CountrySeverityScatter";
 
 type Props = {
   countryId: string;
@@ -210,6 +211,12 @@ export default function CountryOverviewClient({ countryId }: Props) {
         />
 
         <CountryTypeComposition
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+
+        <CountrySeverityScatter
           countryId={countryId}
           selectedTypes={selectedTypes}
           yearRange={yearRange}
