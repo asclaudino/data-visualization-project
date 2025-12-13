@@ -206,11 +206,7 @@ export default function CountryTypeComposition({
       .range(d3.schemeTableau10);
 
     // Axes
-    const xAxis = d3
-      .axisBottom<number>(x)
-      .ticks(4)
-      .tickSize(-innerHeight);
-
+    const xAxis = d3.axisBottom<number>(x).ticks(4).tickSize(-innerHeight);
     const yAxis = d3.axisLeft<string>(y);
 
     g.append("g")
@@ -218,10 +214,7 @@ export default function CountryTypeComposition({
       .attr("class", "x-axis")
       .call(xAxis)
       .call((g) =>
-        g
-          .selectAll("text")
-          .attr("font-size", 10)
-          .attr("fill", "#64748b")
+        g.selectAll("text").attr("font-size", 10).attr("fill", "#64748b")
       )
       .call((g) => g.select(".domain").remove())
       .call((g) =>
@@ -235,10 +228,7 @@ export default function CountryTypeComposition({
       .attr("class", "y-axis")
       .call(yAxis)
       .call((g) =>
-        g
-          .selectAll("text")
-          .attr("font-size", 10)
-          .attr("fill", "#475569")
+        g.selectAll("text").attr("font-size", 10).attr("fill", "#475569")
       )
       .call((g) => g.select(".domain").remove());
 
@@ -251,11 +241,7 @@ export default function CountryTypeComposition({
         : totals.affected;
 
     const getValue = (r: AggRow): number =>
-      metric === "events"
-        ? r.events
-        : metric === "deaths"
-        ? r.deaths
-        : r.affected;
+      metric === "events" ? r.events : metric === "deaths" ? r.deaths : r.affected;
 
     // Bars
     const bars = g
@@ -274,49 +260,65 @@ export default function CountryTypeComposition({
       )
       .attr("width", (d) => x(getValue(d)));
 
-    // Value + % labels at end of bars
-    g.selectAll("text.value-label")
+    // Value + % labels with smart placement (avoid overflow)
+    const LABEL_PAD = 6;
+    const MIN_INSIDE_SPACE = 70; // px threshold to fit label inside bar
+
+    const labels = g
+      .selectAll("text.value-label")
       .data(rows, (d: any) => d.type)
       .join("text")
       .attr("class", "value-label")
-      .attr("x", (d) => {
-        const val = x(getValue(d));
-        // Avoid overflowing to the right
-        return Math.min(val + 4, innerWidth - 4);
-      })
       .attr("y", (d) => (y(d.type) ?? 0) + y.bandwidth() / 2)
       .attr("dy", "0.32em")
-      .attr("text-anchor", "start")
       .attr("font-size", 10)
-      .attr("fill", "#0f172a")
       .text((d) => {
         const value = getValue(d);
-        const pct =
-          metricTotal > 0 ? (value / metricTotal) * 100 : 0;
-        const valueStr =
-          metric === "events"
-            ? `${value}`
-            : value.toLocaleString();
+        const pct = metricTotal > 0 ? (value / metricTotal) * 100 : 0;
+        const valueStr = metric === "events" ? `${value}` : value.toLocaleString();
         return `${valueStr} (${pct.toFixed(1)}%)`;
       });
+
+    // Measure + position after text is set
+    labels.each(function (d) {
+      const textEl = this as SVGTextElement;
+      const textW = textEl.getComputedTextLength();
+
+      const barW = x(getValue(d));
+      const barEnd = barW;
+
+      // Outside placement
+      const outsideX = barEnd + LABEL_PAD;
+      const outsideFits = outsideX + textW <= innerWidth;
+
+      // Inside placement (right-aligned)
+      const insideFits = barW >= textW + MIN_INSIDE_SPACE;
+
+      const useOutside = outsideFits || !insideFits;
+
+      d3.select(textEl)
+        .attr(
+          "x",
+          useOutside ? outsideX : Math.max(LABEL_PAD, barEnd - LABEL_PAD)
+        )
+        .attr("text-anchor", useOutside ? "start" : "end")
+        .attr("fill", useOutside ? "#0f172a" : "#ffffff")
+        .attr("paint-order", "stroke")
+        .attr("stroke", useOutside ? "none" : "rgba(0,0,0,0.35)")
+        .attr("stroke-width", useOutside ? 0 : 2);
+    });
 
     // Interactivity: tooltip + highlight
     bars
       .on("mousemove", (event, d) => {
         const value = getValue(d);
-        const percent =
-          metricTotal > 0 ? value / metricTotal : 0;
+        const percent = metricTotal > 0 ? value / metricTotal : 0;
 
-        const containerRect =
-          containerRef.current?.getBoundingClientRect();
+        const containerRect = containerRef.current?.getBoundingClientRect();
 
         setTooltip({
-          x: containerRect
-            ? event.clientX - containerRect.left
-            : 0,
-          y: containerRect
-            ? event.clientY - containerRect.top
-            : 0,
+          x: containerRect ? event.clientX - containerRect.left : 0,
+          y: containerRect ? event.clientY - containerRect.top : 0,
           type: d.type,
           value,
           percent,
@@ -327,18 +329,12 @@ export default function CountryTypeComposition({
         setTooltip(null);
       })
       .on("click", (_, d) => {
-        setHighlightedType((prev) =>
-          prev === d.type ? null : d.type
-        );
+        setHighlightedType((prev) => (prev === d.type ? null : d.type));
       });
   }, [rows, totals, maxValue, metric, highlightedType]);
 
   const metricLabel =
-    metric === "events"
-      ? "Events"
-      : metric === "deaths"
-      ? "Deaths"
-      : "Affected people";
+    metric === "events" ? "Events" : metric === "deaths" ? "Deaths" : "Affected people";
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -391,28 +387,16 @@ export default function CountryTypeComposition({
         </div>
       </div>
 
-      {loading && (
-        <p className="text-xs text-slate-500">
-          Loading composition…
-        </p>
-      )}
-
-      {error && (
-        <p className="text-xs text-red-500">{error}</p>
-      )}
+      {loading && <p className="text-xs text-slate-500">Loading composition…</p>}
+      {error && <p className="text-xs text-red-500">{error}</p>}
 
       {!loading && !error && !rows.length && (
-        <p className="text-xs text-slate-500">
-          No data for the current filters.
-        </p>
+        <p className="text-xs text-slate-500">No data for the current filters.</p>
       )}
 
       {!loading && !error && rows.length > 0 && (
         <div ref={containerRef} className="relative mt-1">
-          <svg
-            ref={svgRef}
-            className="h-72 w-full md:h-80 lg:h-80"
-          />
+          <svg ref={svgRef} className="h-72 w-full md:h-80 lg:h-80" />
 
           {tooltip && (
             <div
@@ -428,9 +412,7 @@ export default function CountryTypeComposition({
               </div>
               <div className="space-y-0.5 text-slate-700">
                 <div>
-                  <span className="font-medium">
-                    {metricLabel}:
-                  </span>{" "}
+                  <span className="font-medium">{metricLabel}:</span>{" "}
                   {metric === "events"
                     ? tooltip.value
                     : tooltip.value.toLocaleString()}
