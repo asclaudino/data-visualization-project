@@ -10,6 +10,8 @@ import TotalEconomicDamageCard from "./TotalEconomicDamageCard";
 import CountryTimelineStacked from "./CountryTimelineStacked";
 import CountryTypeComposition from "./CountryTypeComposition";
 import CountrySeverityScatter from "./CountrySeverityScatter";
+import CountryDecadeBoxplot from "./CountryDecadeBoxplot";
+
 
 type Props = {
   countryId: string;
@@ -221,6 +223,13 @@ export default function CountryOverviewClient({ countryId }: Props) {
           selectedTypes={selectedTypes}
           yearRange={yearRange}
         />
+
+        <CountryDecadeBoxplot
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+
 
         {/* future visualizations can stack below, each taking one full line */}
         {/* <AnotherVisualization ... /> */}

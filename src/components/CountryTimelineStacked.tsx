@@ -6,7 +6,8 @@ import * as d3 from "d3";
 import { getDisasterData, type DisasterRecord } from "@/lib/emdatData";
 import type { DisasterType } from "@/lib/utils/disasterTypes";
 
-type MetricKey = "events" | "deaths" | "affected";
+// Three modes: deaths, affected people, and economic damage.
+type MetricKey = "deaths" | "affected" | "economic";
 
 type Props = {
   countryId: string;
@@ -20,6 +21,7 @@ type YearTypeAgg = {
   events: number;
   deaths: number;
   affected: number;
+  economic: number; // summed economicDamageAdj ('000 US$)
 };
 
 type TooltipState = {
@@ -46,7 +48,7 @@ export default function CountryTimelineStacked({
   selectedTypes,
   yearRange,
 }: Props) {
-  const [metric, setMetric] = useState<MetricKey>("events");
+  const [metric, setMetric] = useState<MetricKey>("deaths");
   const [data, setData] = useState<DisasterRecord[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +90,6 @@ export default function CountryTimelineStacked({
     byYearDetails,
     maxValue,
   } = useMemo<StackMemo>(() => {
-    // Default empty structure – already correctly typed
     const empty: StackMemo = {
       years: [],
       types: [],
@@ -116,7 +117,16 @@ export default function CountryTimelineStacked({
     );
 
     if (!filtered.length) {
-      return empty;
+      // Still want the buckets for the whole range, but there is no data at all
+      const years: number[] = [];
+      for (let y = startYear; y <= endYear; y++) years.push(y);
+      return {
+        years,
+        types: [],
+        series: [] as StackSeries[],
+        byYearDetails: new Map<number, YearTypeAgg[]>(),
+        maxValue: 0,
+      };
     }
 
     // 1) Determine top 5 types by event count; others => "Other"
@@ -146,6 +156,7 @@ export default function CountryTimelineStacked({
           events: 0,
           deaths: 0,
           affected: 0,
+          economic: 0,
         };
         byYearType.set(key, row);
       }
@@ -153,18 +164,21 @@ export default function CountryTimelineStacked({
       row.events += 1;
       row.deaths += d.totalDeaths ?? 0;
       row.affected += d.totalAffected ?? 0;
+      row.economic += d.economicDamageAdj ?? 0;
     }
 
-    const yearsSet = new Set<number>();
+    // Types set from data
     const typesSet = new Set<string>();
-
     for (const row of byYearType.values()) {
-      yearsSet.add(row.year);
       typesSet.add(row.type);
     }
-
-    const years = Array.from(yearsSet).sort(d3.ascending);
     const types = Array.from(typesSet);
+
+    // Years: **all years in the current range**, even if there is no event
+    const years: number[] = [];
+    for (let y = startYear; y <= endYear; y++) {
+      years.push(y);
+    }
 
     // 3) Build stacked input data: one object per year, keys = types
     const stackInput: StackDatum[] = years.map((year) => {
@@ -192,10 +206,10 @@ export default function CountryTimelineStacked({
     return { years, types, series: stack, byYearDetails, maxValue };
   }, [data, selectedTypes, yearRange, metric, countryId]);
 
-  // Draw chart with D3
+  // Draw chart with D3 (stacked bars)
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
-    if (!years.length || !types.length || !series.length || !maxValue) {
+    if (!years.length) {
       const svg = d3.select(svgRef.current);
       svg.selectAll("*").remove();
       return;
@@ -217,13 +231,15 @@ export default function CountryTimelineStacked({
 
     // Scales
     const x = d3
-      .scaleLinear()
-      .domain(d3.extent(years) as [number, number])
-      .range([0, innerWidth]);
+      .scaleBand<number>()
+      .domain(years)
+      .range([0, innerWidth])
+      .paddingInner(0.15)
+      .paddingOuter(0.05);
 
     const y = d3
       .scaleLinear()
-      .domain([0, maxValue])
+      .domain([0, maxValue || 1]) // avoid [0,0] domain
       .nice()
       .range([innerHeight, 0]);
 
@@ -234,8 +250,12 @@ export default function CountryTimelineStacked({
 
     // Axes
     const xAxis = d3
-      .axisBottom<number>(x)
-      .ticks(Math.min(10, years.length))
+      .axisBottom<number>(x as any)
+      .tickValues(
+        years.length > 16
+          ? years.filter((_, i) => i % Math.ceil(years.length / 8) === 0)
+          : years
+      )
       .tickFormat(d3.format("d") as any);
 
     const yAxis = d3
@@ -272,31 +292,32 @@ export default function CountryTimelineStacked({
           .attr("stroke-opacity", 0.8)
       );
 
-    // Area generator
-    const area = d3
-      .area<d3.SeriesPoint<StackDatum>>()
-      .x((d) => x(d.data.year))
-      .y0((d) => y(d[0]))
-      .y1((d) => y(d[1]))
-      .curve(d3.curveMonotoneX);
+    // Stacked bars (only if we actually have any types)
+    if (types.length && series.length && maxValue > 0) {
+      const layerGroup = g.append("g").attr("class", "layers");
 
-    // Stacked areas
-    const layerGroup = g.append("g").attr("class", "layers");
+      const layer = layerGroup
+        .selectAll("g.layer")
+        .data(series, (d: any) => d.key)
+        .join("g")
+        .attr("class", "layer")
+        .attr("fill", (d) => color(d.key))
+        .attr("fill-opacity", (d) =>
+          highlightedType && highlightedType !== d.key ? 0.2 : 0.9
+        );
 
-    layerGroup
-      .selectAll("path.layer")
-      .data(series, (d: any) => d.key)
-      .join("path")
-      .attr("class", "layer")
-      .attr("fill", (d) => color(d.key))
-      .attr("fill-opacity", (d) =>
-        highlightedType && highlightedType !== d.key ? 0.15 : 0.9
-      )
-      .attr("stroke", (d) => color(d.key))
-      .attr("stroke-width", 0.5)
-      .attr("d", (d) => area(d)!)
-      .append("title")
-      .text((d) => d.key);
+      layer
+        .selectAll("rect")
+        .data((d) => d, (d: any) => d.data.year)
+        .join("rect")
+        .attr("x", (d) => {
+          const v = x(d.data.year);
+          return v == null ? 0 : v;
+        })
+        .attr("width", x.bandwidth())
+        .attr("y", (d) => y(d[1]))
+        .attr("height", (d) => y(d[0]) - y(d[1]));
+    }
 
     // Vertical guideline
     const guideline = g
@@ -317,23 +338,23 @@ export default function CountryTimelineStacked({
       .attr("height", innerHeight)
       .on("mousemove", (event) => {
         const [mx] = d3.pointer(event);
-        const xValue = x.invert(mx);
 
-        // Find nearest year
+        // Find nearest year by bar centre
         let nearest = years[0];
-        let minDist = Math.abs(years[0] - xValue);
+        let minDist = Infinity;
         for (const year of years) {
-          const dist = Math.abs(year - xValue);
+          const cx = (x(year) ?? 0) + x.bandwidth() / 2;
+          const dist = Math.abs(cx - mx);
           if (dist < minDist) {
             minDist = dist;
             nearest = year;
           }
         }
 
-        const xPos = x(nearest);
+        const barX = (x(nearest) ?? 0) + x.bandwidth() / 2;
         guideline
-          .attr("x1", xPos)
-          .attr("x2", xPos)
+          .attr("x1", barX)
+          .attr("x2", barX)
           .style("opacity", 1);
 
         const details = byYearDetails.get(nearest) ?? [];
@@ -347,7 +368,7 @@ export default function CountryTimelineStacked({
           (svgRect?.top ?? 0) - (containerRect?.top ?? 0);
 
         setTooltip({
-          x: offsetX + margin.left + xPos,
+          x: offsetX + margin.left + barX,
           y: offsetY + margin.top + innerHeight / 2,
           year: nearest,
           rows: details,
@@ -366,6 +387,8 @@ export default function CountryTimelineStacked({
       .range(d3.schemeTableau10);
   }, [types]);
 
+  const hasAnyTypeData = types.length > 0;
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -374,23 +397,15 @@ export default function CountryTimelineStacked({
             Disasters over time
           </h2>
           <p className="text-xs text-slate-500">
-            Stacked area chart of disasters by type and year.
+            Stacked bar chart of disasters by type and year. Empty bars
+            indicate years with no recorded events. Switch the metric to
+            view deaths, affected people, or economic losses (in adjusted
+            '000&nbsp;US$).
           </p>
         </div>
 
         {/* Metric toggle */}
         <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-[11px] font-medium">
-          <button
-            type="button"
-            onClick={() => setMetric("events")}
-            className={`px-3 py-1 rounded-full ${
-              metric === "events"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500"
-            }`}
-          >
-            Events
-          </button>
           <button
             type="button"
             onClick={() => setMetric("deaths")}
@@ -413,6 +428,17 @@ export default function CountryTimelineStacked({
           >
             Affected
           </button>
+          <button
+            type="button"
+            onClick={() => setMetric("economic")}
+            className={`px-3 py-1 rounded-full ${
+              metric === "economic"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500"
+            }`}
+          >
+            Economic damage
+          </button>
         </div>
       </div>
 
@@ -421,18 +447,16 @@ export default function CountryTimelineStacked({
       )}
 
       {error && (
-        <p className="text-xs text-red-500">
-          {error}
-        </p>
+        <p className="text-xs text-red-500">{error}</p>
       )}
 
-      {!loading && !error && (!years.length || !types.length) && (
+      {!loading && !error && !years.length && (
         <p className="text-xs text-slate-500">
           No data for the current filters.
         </p>
       )}
 
-      {!loading && !error && years.length > 0 && types.length > 0 && (
+      {!loading && !error && years.length > 0 && (
         <>
           <div ref={containerRef} className="relative mt-1">
             <svg
@@ -452,63 +476,77 @@ export default function CountryTimelineStacked({
                 <div className="mb-1 text-xs font-semibold text-slate-800">
                   {tooltip.year}
                 </div>
-                <div className="space-y-0.5">
-                  {tooltip.rows
-                    .slice()
-                    .sort((a, b) => b[metric] - a[metric])
-                    .map((row) => (
-                      <div
-                        key={row.type}
-                        className="flex items-center justify-between gap-3"
-                      >
-                        <span className="truncate text-slate-600">
-                          {row.type}
-                        </span>
-                        <span className="font-medium text-slate-800">
-                          {metric === "events" &&
-                            `${row.events} evt`}
-                          {metric === "deaths" &&
-                            `${row.deaths.toLocaleString()} deaths`}
-                          {metric === "affected" &&
-                            `${row.affected.toLocaleString()} affected`}
-                        </span>
-                      </div>
-                    ))}
-                </div>
+                {tooltip.rows.length === 0 ? (
+                  <div className="text-[11px] text-slate-500">
+                    No recorded disasters for this year.
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    {tooltip.rows
+                      .slice()
+                      .sort((a, b) => b[metric] - a[metric])
+                      .map((row) => (
+                        <div
+                          key={row.type}
+                          className="flex flex-col gap-0.5"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="truncate text-slate-600">
+                              {row.type}
+                            </span>
+                            <span className="font-medium text-slate-800">
+                              {metric === "deaths" &&
+                                `${row.deaths.toLocaleString()} deaths`}
+                              {metric === "affected" &&
+                                `${row.affected.toLocaleString()} affected`}
+                              {metric === "economic" &&
+                                `${row.economic.toLocaleString()} dmg`}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-500">
+                            {row.events} event
+                            {row.events !== 1 ? "s" : ""} this year
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Legend with isolate-on-click */}
-          <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-            {types.map((t) => {
-              const active = !highlightedType || highlightedType === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() =>
-                    setHighlightedType((prev) =>
-                      prev === t ? null : t
-                    )
-                  }
-                  className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 transition ${
-                    active
-                      ? "border-slate-300 bg-slate-50 text-slate-700"
-                      : "border-slate-200 bg-white text-slate-400 opacity-60"
-                  }`}
-                >
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor: colorForLegend(t),
-                    }}
-                  />
-                  <span>{t}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Legend with isolate-on-click (only if we have any type data) */}
+          {hasAnyTypeData && (
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+              {types.map((t) => {
+                const active = !highlightedType || highlightedType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() =>
+                      setHighlightedType((prev) =>
+                        prev === t ? null : t
+                      )
+                    }
+                    className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 transition ${
+                      active
+                        ? "border-slate-300 bg-slate-50 text-slate-700"
+                        : "border-slate-200 bg-white text-slate-400 opacity-60"
+                    }`}
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        backgroundColor: colorForLegend(t),
+                      }}
+                    />
+                    <span>{t}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </section>
