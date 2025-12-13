@@ -1,3 +1,4 @@
+//src/app/world-map/page.tsx
 "use client";
 //export const metadata = { title: "World Map • Data Visualization Project" };
 
@@ -5,6 +6,8 @@ import Link from "next/link";
 import WorldMap from "@/components/WorldMap";
 import { use } from "react";
 import { useRouter } from "next/navigation";
+import ContinentKPIOverview from "@/components/ContinentKPIOverview";
+
 
 export default function Page() {
   const router = useRouter();
@@ -27,18 +30,27 @@ export default function Page() {
         <h1 className="text-4xl font-bold tracking-tight text-slate-800">
           World Map
         </h1>
-        <p className="mt-4 text-slate-600 text-base">
+        {/* <p className="mt-4 text-slate-600 text-base">
           Interactive, responsive world map rendered with{" "}
           <span className="font-semibold text-slate-800">D3.js</span> and{" "}
           <span className="font-semibold text-slate-800">TopoJSON</span>.
+        </p> */}
+        <p className="mt-4 text-slate-600 text-base">
+          Select a country to view detailed visualizations.
         </p>
 
         <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner">
+          {/* NEW: overview below the map */}
+          <ContinentKPIOverview initialMetric="events" />
+
           <WorldMap
             dataUrl="data/countries-110m.json"
             objectName="countries"
             onCountryClick={handleCountryClick}
           />
+          
+          
+        
         </div>
 
         <div className="mt-8">

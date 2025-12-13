@@ -290,6 +290,7 @@ export default function WorldMap({
       </div>
 
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      
     </div>
   );
 

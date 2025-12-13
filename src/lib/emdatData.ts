@@ -4,6 +4,11 @@ import * as d3 from "d3";
 export type DisasterRecord = {
   iso: string;
   country: string;
+
+  // NEW: geography
+  region: string;     // e.g. "Africa", "Europe", ...
+  subregion: string;  // e.g. "Western Europe", ...
+
   year: number;
   startMonth: number | null;
   startDay: number | null;
@@ -12,7 +17,7 @@ export type DisasterRecord = {
 
   disasterType: string;
 
-  // NEW FIELDS
+  // Metrics
   totalDeaths: number | null;
   totalAffected: number | null;
 
@@ -53,59 +58,63 @@ function parseNumericField(raw: string | undefined): number | null {
   return Number.isFinite(num) ? num : null;
 }
 
+function parseStringField(raw: string | undefined): string {
+  if (raw == null) return "";
+  return raw.trim();
+}
+
 export function getDisasterData(): Promise<DisasterRecord[]> {
   if (!cachedData) {
     cachedData = d3
       .dsv(";", DATA_PATH, (row) => {
-        // row is a d3.DSVRowString<string>
-        const iso = (row.ISO || "").trim();
-        const country = (row.Country || "").trim();
-        const yearStr = row["Start Year"];
-        const disasterType = (row["Disaster Type"] || "").trim();
+        const iso = parseStringField(row.ISO);
+        const country = parseStringField(row.Country);
 
+        // NEW: Region & Subregion (your CSV headers show "Region" and "Subregion")
+        const region =
+          parseStringField(row.Region) ||
+          parseStringField((row as any)["EMDAT Region"]) ||
+          "";
+
+        const subregion =
+          parseStringField(row.Subregion) ||
+          parseStringField((row as any)["EMDAT Subregion"]) ||
+          "";
+
+        const yearStr = row["Start Year"];
         const year = yearStr ? +yearStr : NaN;
+
+        const disasterType = parseStringField(row["Disaster Type"]);
 
         const startMonth = parseNumericField(row["Start Month"]);
         const startDay = parseNumericField(row["Start Day"]);
         const endMonth = parseNumericField(row["End Month"]);
         const endDay = parseNumericField(row["End Day"]);
-        // --- NEW: numeric metrics ------------------------------------------
-        const totalDeaths = parseNumericField(
-          row["Total Deaths"] as string | undefined
-        );
 
-        const totalAffected = parseNumericField(
-          row["Total Affected"] as string | undefined
-        );
+        const totalDeaths = parseNumericField(row["Total Deaths"] as string | undefined);
+        const totalAffected = parseNumericField(row["Total Affected"] as string | undefined);
 
         const totalDamageAdj = parseNumericField(
           row["Total Damage, Adjusted ('000 US$)"] as string | undefined
         );
 
         const reconstructionCostsAdj = parseNumericField(
-          row["Reconstruction Costs, Adjusted ('000 US$)"] as
-            | string
-            | undefined
+          row["Reconstruction Costs, Adjusted ('000 US$)"] as string | undefined
         );
 
-        // Different EM-DAT extracts sometimes vary in the insured column name.
         const insuredDamageAdj =
-          parseNumericField(
-            row["Insured Damage, Adjusted ('000 US$)"] as string | undefined
-          ) ??
-          parseNumericField(
-            row["Insured, Adjusted ('000 US$)"] as string | undefined
-          ) ??
+          parseNumericField(row["Insured Damage, Adjusted ('000 US$)"] as string | undefined) ??
+          parseNumericField(row["Insured, Adjusted ('000 US$)"] as string | undefined) ??
           parseNumericField(row["Insured"] as string | undefined);
 
-        // Convenience field for your "Total economic damage" card:
-        // prefer totalDamageAdj, then reconstructionCostsAdj, then insuredDamageAdj.
         const economicDamageAdj =
           totalDamageAdj ?? reconstructionCostsAdj ?? insuredDamageAdj ?? null;
 
         return {
           iso,
           country,
+          region,
+          subregion,
           year,
           startMonth,
           startDay,
@@ -128,6 +137,10 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
         );
 
         console.log("[EMDAT] Cleaned rows:", cleaned.length);
+        console.log(
+          "[EMDAT] Example regions:",
+          Array.from(new Set(cleaned.map((d) => d.region))).slice(0, 10)
+        );
         console.log(
           "[EMDAT] Example disaster types:",
           Array.from(new Set(cleaned.map((d) => d.disasterType))).slice(0, 10)
