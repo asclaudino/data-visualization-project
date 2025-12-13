@@ -11,6 +11,7 @@ import CountryTimelineStacked from "./CountryTimelineStacked";
 import CountryTypeComposition from "./CountryTypeComposition";
 import CountrySeverityScatter from "./CountrySeverityScatter";
 import CountryDecadeBoxplot from "./CountryDecadeBoxplot";
+import CountrySeasonalityHeatmap from "./CountrySeasonalityHeatmap";
 
 
 type Props = {
@@ -212,6 +213,12 @@ export default function CountryOverviewClient({ countryId }: Props) {
           yearRange={yearRange}
         />
 
+        <CountrySeasonalityHeatmap
+          countryId={countryId}
+          selectedTypes={selectedTypes}
+          yearRange={yearRange}
+        />
+
         <CountryTypeComposition
           countryId={countryId}
           selectedTypes={selectedTypes}
@@ -230,7 +237,7 @@ export default function CountryOverviewClient({ countryId }: Props) {
           yearRange={yearRange}
         />
 
-
+        
         {/* future visualizations can stack below, each taking one full line */}
         {/* <AnotherVisualization ... /> */}
       </div>

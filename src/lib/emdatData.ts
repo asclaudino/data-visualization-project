@@ -5,6 +5,11 @@ export type DisasterRecord = {
   iso: string;
   country: string;
   year: number;
+  startMonth: number | null;
+  startDay: number | null;
+  endMonth: number | null;
+  endDay: number | null;
+
   disasterType: string;
 
   // NEW FIELDS
@@ -60,6 +65,10 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
 
         const year = yearStr ? +yearStr : NaN;
 
+        const startMonth = parseNumericField(row["Start Month"]);
+        const startDay = parseNumericField(row["Start Day"]);
+        const endMonth = parseNumericField(row["End Month"]);
+        const endDay = parseNumericField(row["End Day"]);
         // --- NEW: numeric metrics ------------------------------------------
         const totalDeaths = parseNumericField(
           row["Total Deaths"] as string | undefined
@@ -98,6 +107,10 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
           iso,
           country,
           year,
+          startMonth,
+          startDay,
+          endMonth,
+          endDay,
           disasterType,
           totalDeaths,
           totalAffected,
