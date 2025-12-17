@@ -43,7 +43,7 @@ export type DisasterRecord = {
   economicDamageAdj: number | null;
 };
 
-const DATA_PATH = "/data/emdat_data.csv"; // public/data/emdat_data.csv
+const DATA_PATH = "/data/emdat_data_cleaned.csv"; // public/data/emdat_data.csv
 
 let cachedData: Promise<DisasterRecord[]> | null = null;
 
@@ -66,7 +66,7 @@ function parseStringField(raw: string | undefined): string {
 export function getDisasterData(): Promise<DisasterRecord[]> {
   if (!cachedData) {
     cachedData = d3
-      .dsv(";", DATA_PATH, (row) => {
+      .dsv(",", DATA_PATH, (row) => {
         const iso = parseStringField(row.ISO);
         const country = parseStringField(row.Country);
 
