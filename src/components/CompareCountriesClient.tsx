@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { DISASTER_TYPES, type DisasterType } from "@/lib/utils/disasterTypes";
 import {type CountriesType } from "@/lib/utils/mapCountriesList";
-import CountryComparison from "./CountryComparison";
+import CountryComparison from "./CountryComparisonDisasterType";
 
 const MIN_YEAR = 1900;
 const MAX_YEAR = 2025;
