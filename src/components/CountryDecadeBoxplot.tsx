@@ -263,7 +263,7 @@ export default function CountryDecadeBoxplot({
           ? "Deaths per event"
           : metric === "affected"
           ? "People affected per event"
-          : "Economic damage per event ('000 US$)"
+          : "Economic damage per event (M US$)"
       );
 
     const boxGroup = g.append("g").attr("class", "boxes");

@@ -68,11 +68,11 @@ export default function CountryOverviewClient({ countryId }: Props) {
       aria-label="Country visualizations"
       className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner text-left"
     >
-      <p className="text-slate-500 text-sm mb-4">
+      {/* <p className="text-slate-500 text-sm mb-4">
         D3 visualizations for{" "}
         <span className="font-semibold text-slate-800">{countryId}</span> will
         live here.
-      </p>
+      </p> */}
 
       {/* Filters */}
       <div className="mb-6 space-y-4">

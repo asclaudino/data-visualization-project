@@ -279,7 +279,7 @@ export default function CountrySeasonalityHeatmap({
               ? "Deaths"
               : metric === "affected"
                 ? "Affected"
-                : "Economic damage (adj, '000 US$)";
+                : "Economic damage (adj, M US$)";
 
         setTooltip({
           x: containerRect ? event.clientX - containerRect.left : 0,
@@ -372,14 +372,15 @@ export default function CountrySeasonalityHeatmap({
         <div>
           <h2 className="text-sm font-semibold text-slate-800">Seasonality</h2>
           <p className="text-xs text-slate-500">
-            Heatmap of disaster activity by month. Rows are {resolution === "decade" ? "decades" : "years"}; darker cells mean higher{" "}
-            {metric === "events"
+            Heatmap of disaster activity by month. Rows are {resolution === "decade" ? "decades" : "years"}. 
+            {/* darker cells mean higher{" "} */}
+            {/* {metric === "events"
               ? "event counts"
               : metric === "deaths"
                 ? "deaths"
                 : metric === "affected"
                   ? "affected people"
-                  : "economic damage (adjusted, '000 US$)"}.
+                  : "economic damage (adjusted, '000 US$)"}. */}
           </p>
         </div>
 

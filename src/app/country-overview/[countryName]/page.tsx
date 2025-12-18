@@ -24,9 +24,9 @@ export default async function CountryPage({ params }: CountryPageProps) {
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-800">
               {decodedName}
             </h1>
-            <p className="mt-2 text-slate-600 text-sm md:text-base">
+            {/* <p className="mt-2 text-slate-600 text-sm md:text-base">
               Detailed data visualizations and insights for this country.
-            </p>
+            </p> */}
           </div>
 
           <Link

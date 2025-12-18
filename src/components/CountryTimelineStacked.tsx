@@ -397,10 +397,9 @@ export default function CountryTimelineStacked({
             Disasters over time
           </h2>
           <p className="text-xs text-slate-500">
-            Stacked bar chart of disasters by type and year. Empty bars
-            indicate years with no recorded events. Switch the metric to
-            view deaths, affected people, or economic losses (in adjusted
-            '000&nbsp;US$).
+            Stacked bar chart of disasters by type and year. Switch the metric to
+            view betweendeaths, affected people, or economic losses (in adjusted
+             M US$).
           </p>
         </div>
 
@@ -500,7 +499,7 @@ export default function CountryTimelineStacked({
                               {metric === "affected" &&
                                 `${row.affected.toLocaleString()} affected`}
                               {metric === "economic" &&
-                                `${row.economic.toLocaleString()} dmg`}
+                                `$${row.economic.toLocaleString()} M`}
                             </span>
                           </div>
                           <div className="text-[10px] text-slate-500">

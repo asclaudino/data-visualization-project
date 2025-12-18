@@ -628,9 +628,8 @@ export default function CountrySeverityScatter({
             Severity vs frequency
           </h2>
           <p className="text-xs text-slate-500">
-            Each bubble is a disaster event: left–right = people affected
-            (log scale), up = deaths, size = economic damage (adjusted),
-            colour = disaster type.
+            Each bubble is a disaster event. Size conveys economic damage (adjusted),
+            colour distinguishes disaster type.
           </p>
         </div>
 

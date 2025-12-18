@@ -343,10 +343,10 @@ export default function CountryTypeComposition({
           <h2 className="text-sm font-semibold text-slate-800">
             Composition by disaster type
           </h2>
-          <p className="text-xs text-slate-500">
+          {/* <p className="text-xs text-slate-500">
             Ranked horizontal bars showing which types dominate in{" "}
             {metricLabel.toLowerCase()}.
-          </p>
+          </p> */}
         </div>
 
         {/* Metric toggle */}
