@@ -47,7 +47,7 @@ export default function Home() {
           <span className="font-semibold text-slate-800">Next.js</span> and{" "}
           <span className="font-semibold text-slate-800">D3.js</span>.
         </p>
-        © {new Date().getFullYear()} Data Visualization Project
+        {/* © {new Date().getFullYear()} Data Visualization Project */}
       </footer>
     </main>
   );
