@@ -35,8 +35,8 @@ function formatInt(n: number): string {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 }
 
-function formatMoneyThousandsUSD(valueInThousands: number): string {
-  const usd = valueInThousands * 1000;
+function formatMoneyThousandsUSD(valueInMillions: number): string {
+  const usd = valueInMillions * 1000000;
   return new Intl.NumberFormat(undefined, {
     notation: "compact",
     maximumFractionDigits: 2,
