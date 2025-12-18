@@ -15,3 +15,5 @@ function loadCountriesFromCSV() {
 
 // Call once and export as a constant
 export const mapCountriesList = loadCountriesFromCSV();
+
+export type CountriesType = (typeof mapCountriesList)[number];
