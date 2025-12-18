@@ -107,8 +107,12 @@ export function getDisasterData(): Promise<DisasterRecord[]> {
           parseNumericField(row["Insured, Adjusted ('000 US$)"] as string | undefined) ??
           parseNumericField(row["Insured"] as string | undefined);
 
-        const economicDamageAdj =
+        let economicDamageAdj =
           totalDamageAdj ?? reconstructionCostsAdj ?? insuredDamageAdj ?? null;
+
+        if (economicDamageAdj !== null) {
+          economicDamageAdj = economicDamageAdj / 1000;
+        }
 
         return {
           iso,
