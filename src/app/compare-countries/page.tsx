@@ -1,3 +1,7 @@
+import { mapCountriesList, type CountriesType } from "@/lib/utils/mapCountriesList";
+
+import CompareCountriesClient from "../../components/CompareCountriesClient";
+
 export const metadata = { title: "Compare Countries • Data Visualization Project" };
 
 import Link from "next/link";
@@ -17,10 +21,7 @@ export default function Page() {
         </p>
 
         <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner">
-          {/* <CompareCountries /> */}
-          <p className="text-slate-500 italic">
-            (Visualization placeholder — connect your D3 component here)
-          </p>
+          <CompareCountriesClient mapCountriesList={mapCountriesList}/>
         </div>
 
         <div className="mt-8">
