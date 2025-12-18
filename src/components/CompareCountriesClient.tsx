@@ -100,9 +100,9 @@ const handleCountrySelect = (country: CountriesType) => {
       aria-label="Compare countries"
       className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner text-left"
     >
-      <p className="text-slate-500 text-sm mb-4">
+      {/* <p className="text-slate-500 text-sm mb-4">
         D3 visualizations for comparing countries live here.
-      </p>
+      </p> */}
 
       {/* Filters */}
       <div className="mb-6 space-y-4">
@@ -127,6 +127,7 @@ const handleCountrySelect = (country: CountriesType) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="mb-2 border rounded px-2 py-1"
+              style={{ color: "black" }}
             />
 
             {displayedCountries.length > 0 && (
@@ -275,7 +276,7 @@ const handleCountrySelect = (country: CountriesType) => {
           selectedTypes={selectedDisasterTypes}
           yearRange={yearRange}
         />
-                            
+
         {/* future visualizations can stack below, each taking one full line */}
         {/* <AnotherVisualization ... /> */}
       </div>

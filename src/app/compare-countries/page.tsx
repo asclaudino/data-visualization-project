@@ -14,11 +14,11 @@ export default function Page() {
         <h1 className="text-4xl font-bold tracking-tight text-slate-800">
           Compare Countries
         </h1>
-        <p className="mt-4 text-slate-600 text-base">
+        {/* <p className="mt-4 text-slate-600 text-base">
           Select two countries and a metric —{" "}
           <span className="font-semibold text-slate-800">D3</span> will render a
           clean comparative visualization.
-        </p>
+        </p> */}
 
         <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-inner">
           <CompareCountriesClient mapCountriesList={mapCountriesList}/>
