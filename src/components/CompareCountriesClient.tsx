@@ -5,6 +5,7 @@ import { DISASTER_TYPES, type DisasterType } from "@/lib/utils/disasterTypes";
 import {type CountriesType } from "@/lib/utils/mapCountriesList";
 import CountryComparison from "./CountryComparisonDisasterType";
 import CountryTimelineDiverging from "./CountryCompareTimelineDiverging";
+import CountryRaincloudHalfViolin from "./CompareCountriesRaincloudHalfViolin";
 
 const MIN_YEAR = 1900;
 const MAX_YEAR = 2025;
@@ -268,7 +269,13 @@ const handleCountrySelect = (country: CountriesType) => {
           selectedTypes={selectedDisasterTypes}
           yearRange={yearRange}
         />        
-                    
+
+        <CountryRaincloudHalfViolin
+          selectedCountries={selectedCountries}
+          selectedTypes={selectedDisasterTypes}
+          yearRange={yearRange}
+        />
+                            
         {/* future visualizations can stack below, each taking one full line */}
         {/* <AnotherVisualization ... /> */}
       </div>
